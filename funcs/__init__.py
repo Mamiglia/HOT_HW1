@@ -1,2 +1,3 @@
-from .splex_utils import obj_function, adjmatrix2adjmap
+from .splex_utils import *
 from .readin import readin, show_adj_matrix
+from .Greedy import GreedySPlex

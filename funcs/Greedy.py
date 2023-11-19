@@ -1,6 +1,7 @@
 import numpy as np
 from funcs import adjmatrix2adjmap
 from itertools import chain
+import random
 
 class GreedySPlex:
     TERROR_VALUE = 99999
@@ -12,19 +13,32 @@ class GreedySPlex:
         self.s = s 
         self.weightmap = adjmatrix2adjmap(self.W)
 
+    def random_solution(self):
+        # We start with the graph with all edges removed
+        # and we try to add them back one at a time
+        edges = [e for e in self.weightmap.keys() if self.weightmap[e]<0]
+        random.shuffle(edges)
+        return self.solve(edges)
+
     def solution(self):
-        splexes = {i:{i} for i in range(self.A.shape[0])}
-        A1 = np.zeros(self.A.shape, dtype=int)
         # We start with the graph with all edges removed
         # and we try to add them back one at a time (sorted by weight)
-        edges_by_weight = sorted([e for e in self.weightmap.keys() if self.weightmap[e]<0], key=self.weightmap.get)
+        edges = [e for e in self.weightmap.keys() if self.weightmap[e]<0]
+        edges_by_weight = sorted(edges, key=self.weightmap.get)
+        return self.solve(edges_by_weight)
 
-        for i,j in edges_by_weight:
+    def solve(self, edges: dict):
+        splexes = {i:{i} for i in range(self.A.shape[0])}
+        A1 = np.zeros(self.A.shape, dtype=int)
+
+        for i,j in edges:
+            # print(f"Considering [{i},{j}]")
             s_i = splexes[i]
             s_j = splexes[j]
             plex_size = len(s_i) + len(s_j)
             
-            if s_i is s_j or plex_size <= (S+1):
+            if s_i is s_j or plex_size <= (self.s+1):
+                # print('\tFast merge.')
                 # if they are less than S+1 they are always a legit s-plex
                 self.merge(i,j,splexes, A1)
                 continue
@@ -48,19 +62,31 @@ class GreedySPlex:
             # set the weights of already present edges to terror value
             W1[A1 == 1] = GreedySPlex.TERROR_VALUE
             np.fill_diagonal(W1, GreedySPlex.TERROR_VALUE)
-
+            # print(f'\tCandidate Merging {s_i} U {s_j}')
+            missing_edges = {k:plex_size - self.s - A1[k].sum() for k in candidate_splex}
             for k in candidate_splex:
-                missing_edges = plex_size - self.s - A1[k].sum()
+                m = missing_edges[k]
+                # print(f'\t\tConsidering {k}, missing: {m}')
+                if m <= 0:
+                    added_edges[k] = []
+                    continue
+
                 weights = W1[k]
-                nodes = np.argpartition(weights, missing_edges)[:missing_edges+1]
+                nodes = np.argpartition(weights, m)[:m]
+                # print(f'\t\t{weights}')
+                # print(f'\t\t{nodes}')
 
                 added_edges[k] = nodes
+                for node in nodes:
+                    missing_edges[node] -= 1
                 cost += self.W[k,nodes].sum()
                 W1[k,nodes] = GreedySPlex.TERROR_VALUE
                 W1[nodes,k] = GreedySPlex.TERROR_VALUE
 
             # if the computed cost indicates that there's a gain
+            # print(f'\tCost: {cost}')
             if cost < 0:
+                # print('\tMerge.')
                 self.merge(i,j,splexes, A1, added_edges)
 
         return A1, splexes
