@@ -10,16 +10,19 @@ class VariableNeighborhoodDescent:
 
     def search(self, x0 : Solution) -> Solution:
         x = x0
+        improved = True
+        while improved:
+            improved = False
+            for neighborhood in self.neighborhoods:
+                xs = neighborhood.neighbor_list(x)
+                x1 = min(xs, key = lambda x: x.obj())
 
-        for neighborhood in self.neighborhoods:
-            xs = neighborhood.neighbor_list(x)
-            x1 = min(xs, key = lambda x: x.obj())
+                if x1.obj() < x.obj():
+                    x = x1
+                    improved = True
+                    break
 
-            if x1.obj() < x.obj():
-                x = x1
-                break
-        else:
-            return self.search(x)
+
         
         return x
                 
