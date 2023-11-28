@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Tuple
 import networkx as nx
+import os
 
 def readin(filename : str) -> Tuple[int, np.ndarray, np.ndarray]:
     with open(filename, 'r') as f:
@@ -26,8 +27,22 @@ def show_adj_matrix(A: np.ndarray, W: np.ndarray = None):
     if W is not None:
         A = A*W
     G = nx.from_numpy_array(A)
+    f = plt.figure(figsize=(3,3))
     nx.draw(G, with_labels=True)
     plt.show()
+
+def writeout(A, A1, folder, prob_name, addendum=''):
+    if not os.path.exists('output/'+folder):
+        os.makedirs('output/'+folder)
+    ii, jj = np.where(A != A1)
+    ii+=1
+    jj+=1
+    with open('output/'+folder+prob_name+addendum+'.txt', '+w') as f:
+        f.write(prob_name + '\n')
+        for i,j in zip(ii, jj):
+            if i>=j:
+                continue
+            f.write(f'{i} {j}\n')
 
 
 # s, A, W = readin('data/test1.txt')
