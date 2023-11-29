@@ -146,7 +146,7 @@ def random_idx(A : npt.NDArray[np.int32]):
 
 
 @nb.njit#(nbt.UniTuple(nbt.List(nbt.List(nb.int32)), )(nb.int32[:,:]))
-def weighted_karger(W : npt.NDArray[np.int32]):
+def weighted_karger(W : npt.NDArray[np.int32], random=False):
     '''Inspired by Karger algroithm for probabilistic min-cut. 
     It searches the max-cut over the weighted edges and partitions the graph into clusters
     '''
@@ -155,8 +155,10 @@ def weighted_karger(W : npt.NDArray[np.int32]):
     nodes = list(range(W.shape[0]))
 
     while A.shape[0] > 2 and A.min() < 0 :
-        # i,j =  divmod(A.argmin(), A.shape[1]) # deterministic
-        i,j = random_idx(A) 
+        if random:
+            i,j = random_idx(A)
+        else: 
+            i,j =  divmod(A.argmin(), A.shape[1]) # deterministic
 
         cluster[i] += cluster[j]
 
@@ -209,10 +211,18 @@ class Karger:
 
 
     def random_solution(self):
-        clusters = weighted_karger(self.W)
+        clusters = weighted_karger(self.W, random=True)
         A1 = sum(deletion_heuristic(self.W, plex=cl, s=self.s) for cl in clusters)
 
         splexes = {i:plex for plex in clusters for i in plex}
         return A1, splexes
+    
+    def solution(self):
+        clusters = weighted_karger(self.W, random=False)
+        A1 = sum(deletion_heuristic(self.W, plex=cl, s=self.s) for cl in clusters)
+
+        splexes = {i:plex for plex in clusters for i in plex}
+        return A1, splexes
+
 
 
