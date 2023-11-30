@@ -6,7 +6,7 @@ from typing import Collection
 import random
 
 class VariableNeighborhoodDescent:
-    def __init__(self, neighborhoods : Collection[Neighborhood], mode = 'best_first') -> None:
+    def __init__(self, neighborhoods : Collection[Neighborhood], mode = 'first') -> None:
         assert mode in ['first', 'best', 'random']
         self.neighborhoods = neighborhoods
         self.mode = mode
@@ -43,7 +43,7 @@ class VariableNeighborhoodDescent:
                     else:
                         break
                 elif self.mode == 'random':
-                    for _ in range(100):
+                    for _ in range(1000):
                         x1 = neighborhood.shaking(x)
                         if x1.obj() < x.obj():
                             # print(f'Found {len(self.history)}th improvement at {neighborhood}. Delta={x.obj()-x1.obj()}')
