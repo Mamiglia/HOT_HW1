@@ -176,6 +176,20 @@ class SwapNode(Neighborhood):
         y._obj = x.obj() + x.W[i]@(y.A1[i] - x.A1[i]) + x.W[j]@(y.A1[j] - x.A1[j]) 
 
         return y
+    
+    def destroy(self, x0:Solution) -> Tuple[Solution, List[List[int]]]:
+        plexes = list(x0.plexes())
+        if len(plexes) == x0.size or len(x0.clusters[0]) == x0.size:
+            print("SKIP SWAP:\t all clusters are unitary")
+            return x0, plexes
+        cl1, cl2 = random.sample(plexes, k=2)
+        i,j = random.choice(cl1), random.choice(cl2)
+
+
+        x1 = self.step(x0, i, j)
+        return x1, [x1.clusters[i], x1.clusters[j]]
+        
+
 
 from funcs import show_adj_matrix
 
@@ -228,7 +242,7 @@ class MoveNode(Neighborhood):
         if plex is None:
             # Create new cluster
             y.clusters[i] = [i]
-            assert is_splex(y.A1, self.S)
+            # assert is_splex(y.A1, self.S)
 
             return y
         
@@ -252,18 +266,21 @@ class MoveNode(Neighborhood):
         y.clusters[i].append(i)
         y._obj += (y.W[i,jj]).sum()
 
-        assert is_splex(y.A1, self.S)
+        # assert is_splex(y.A1, self.S)
 
         return y
 
 
 import numba as nb
 from .Greedy import weighted_karger
+
+# DESTROY
+
 # @nb.jitclass
 class Divide(Neighborhood):
     def shaking(self, x: Solution) -> Solution:
         plex = random.choice(x.clusters)
-        return self.step(x, plex)
+        return self.step(x, plex)[0]
 
     def step(self, x: Solution, plex:List[int]):
         y = x.copy()
@@ -283,10 +300,75 @@ class Divide(Neighborhood):
         y.A1 *= mask
 
         y._obj = x.obj() - ((1-mask) * x.A1 * x.W).sum()//2
-        return y 
+        return y, subplexes
     
     def neighbors(self, x: Solution) -> Iterator[Solution]:
         for plex in x.clusters:
-            yield self.step(x,plex)
+            yield self.step(x,plex)[0]
+    
+    def compute_cluster_cost(self, x0:Solution, cluster):
+        idx = np.ix_(cluster, cluster)
+        W = x0.W[idx]
+        A = x0.A1[idx]
+
+        return (A*W).sum()
                 
+    def destroy(self, x0:Solution) -> Tuple[Solution, List[List[int]]]:
+        plexes = list(x0.plexes())
+        if len(plexes) == x0.size:
+            print("SKIP DIVIDE:\t all clusters are unitary")
+            return x0, plexes
+        
+        if len(plexes) > 1:
+            cluster_costs = np.array([self.compute_cluster_cost(x0,plex) for plex in plexes])
+            cluster_costs -= cluster_costs.min()
+            idx = np.random.choice(len(plexes), p= cluster_costs / sum(cluster_costs))
+            cluster = plexes[idx]
+        else:
+            cluster = plexes[0]
+        
+        return self.step(x0, cluster)
+
+from .Greedy import random_idx
+class Merge(Neighborhood):
+    def shaking(self, x: Solution) -> Solution:
+        c1, c2 = random.sample(x.plexes(), 2)
+        return self.step(x, c1,c2)
+    
+    def step(self, x:Solution, c1:List[int], c2:List[int]) -> Solution:
+        x1 = x.copy()
+        x1.clusters[c1[0]] += c2
+        for j in c2:
+            x1.clusters[j] = x1.clusters[c1[0]]
+
+        return x1
+    
+    def neighbors(self, x: Solution) -> Iterator[Solution]:
+        return super().neighbors(x)
+    
+    def closest_cluster(self, x:Solution) -> Tuple[int, int]:
+        plexes = list(x.plexes())
+        
+        W1 = [x.W[plex].sum(axis=0) for plex in plexes]
+        W1 = np.stack(W1)
+        W1 = [W1[:,plex].sum(axis=1) for plex in plexes]
+        W1 = np.stack(W1)
+        np.fill_diagonal(W1, 99999)
+        W1 = W1.astype(np.int32)
+
+        c1,c2 =  random_idx(W1)
+
+    
+    def destroy(self, x : Solution) -> Tuple[Solution, List[List[int]]]:
+        if len(x.clusters[0]) == x.size:
+            print("SKIP MERGE:\t only one cluster.")
+            return x, [x.clusters[0]]
+        # i,j = self.closest_cluster(x)
+        # c1, c2 = x.clusters[i], x.clusters[j]
+
+        plexes = list(x.plexes())
+        c1, c2  = random.sample(plexes, k= 2)
+
+        return self.step(x, c1, c2), [c1, c2]
+
 

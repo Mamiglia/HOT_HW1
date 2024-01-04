@@ -30,10 +30,21 @@ class Solution:
         self._obj = self._obj // 2
         return self._obj
     
+    def plexes(self):
+        clusters_ids = set()
+        for plex in self.clusters.values():
+            if id(plex) in clusters_ids:
+                continue
+            clusters_ids.add(id(plex))
+            
+            yield plex
+
+    
     @staticmethod
     def build(A, W, A1, clusters):
         clusters = {k:s for s in [list(s) for s in clusters.values()] for k in s}
         W1 = W.copy()
+        np.fill_diagonal(W1, W1.sum())
         W1[A==1] = - W1[A==1]
 
         return Solution(W1,A1,clusters)

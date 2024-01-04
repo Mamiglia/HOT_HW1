@@ -201,6 +201,33 @@ def deletion_heuristic(A : npt.NDArray[np.int32], plex: List[int], s:int):
     res[cluster_idx] = A1
     return res
 
+def insertion_heuristic(A : npt.NDArray[np.int32], plex: List[int], s:int):
+    '''given some plex nodes remove all the possible edges starting from the biggest one until possible'''
+    if len(plex) == 1:
+        return np.zeros_like(A, dtype=np.int32)
+    cluster_idx = np.ix_(plex, plex)
+    Ac = A[cluster_idx]     # Adjacency matrix for the cluster only
+    min_edges = len(plex) - s
+    A1 = np.zeros_like(Ac, dtype=np.int32)
+    A1[Ac < 0] = 1
+    Ac[Ac < 0] = Ac[0,0]
+
+    for i in range(Ac.shape[0]):
+        missing_edges = min_edges - A1[i].sum()
+        if missing_edges <= 0:
+            continue
+        edges = np.argpartition(Ac[i], missing_edges)[:missing_edges]
+        A1[i,edges] = 1
+        A1[edges,i] = 1
+        Ac[i, edges] = 99999
+        Ac[edges, i] = 99999
+    
+    res = np.zeros_like(A, dtype=np.int32)
+    res[cluster_idx] = A1
+    return res
+        
+
+
 class Karger:
     def __init__(self, adjacency_matrix : np.ndarray, weight_matrix: np.ndarray, s: int):
         self.A = adjacency_matrix

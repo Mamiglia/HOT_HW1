@@ -35,7 +35,7 @@ class SimulatedAnnealing:
                 iteration+=1
             
             epoch+=1
-            T = T/self.cooling
+            T = T*self.cooling
         return best
 
                 
