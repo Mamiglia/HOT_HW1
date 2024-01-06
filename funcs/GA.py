@@ -1,6 +1,7 @@
 import numpy as np
 from .Solution import Solution
 from funcs import VariableNeighborhoodDescent, SwapNode
+from itertools import chain
 
 def deletion_heuristic(A, plex, s):
     '''given some plex nodes remove all the possible edges starting from the biggest one until possible'''
@@ -43,7 +44,7 @@ class GeneticAlgorithm:
         parent1 = self.selection(population)
         parent2 = self.selection(population)
         child = self.crossover(parent1, parent2)
-        # child = self.mutation(child)
+        child = self.mutation(child)
         population = self.survival(population, child)
 
         return population
@@ -66,8 +67,8 @@ class GeneticAlgorithm:
         child_A1 = sum(deletion_heuristic(child_W, plex=cl, s=self.S) for cl in child_clusters)
         child_splexes = {i:plex for plex in child_clusters for i in plex}
         child = Solution.build(self.A, child_W, child_A1, child_splexes)
-        local_search = VariableNeighborhoodDescent([SwapNode(self.A.shape[0])])
-        child = local_search.search(child)
+        # local_search = VariableNeighborhoodDescent([SwapNode(self.A.shape[0])])
+        # child = local_search.search(child)
         return child
     
     def mutation(self, child: Solution) -> Solution:
@@ -83,13 +84,17 @@ class GeneticAlgorithm:
         
         if idx != -1:
             population[idx] = child
+            print('Replaced')
 
         return population
     
     def evolution(self, max_generations: int = 1000) -> Solution:
         population = self.population
         for generation in range(max_generations):
+            # print(f'Generation {generation}')
             population = self.next_generation(population)
+            if generation % 100 == 0:
+                print(f'Generation {generation}')
 
         return population
     

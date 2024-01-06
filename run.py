@@ -2,8 +2,9 @@ from funcs import readin, Solution, GA, is_splex
 from funcs.Greedy import Karger
 import numpy as np
 
-# file = 'data/test_instances/heur001_n_10_m_31.txt'
-file = 'data/test_instances/heur011_n_250_m_6574.txt'
+file = 'data/test_instances/heur030_n_330_m_5613.txt'
+# file = 'data/test_instances/heur022_n_322_m_14226.txt'
+# file = 'data/test_instances/heur039_n_361_m_13593.txt'
 
 S,A,W = readin(file)
 greedy = Karger(A, W, S)
@@ -13,16 +14,21 @@ def random_start():
 
 
 # Genetic Algorithm
-length_population = 10
+length_population = 100
 initial_population = [random_start() for _ in range(length_population)]
 GeneticAlgorithm = GA.GeneticAlgorithm(initial_population, A, S)
+# parent1 = GeneticAlgorithm.selection(initial_population)
+# parent2 = GeneticAlgorithm.selection(initial_population)
+# child = GeneticAlgorithm.crossover(parent1, parent2)
+# if is_splex(child.A1, S):
+#     print('Yes')
 
-print(min(GeneticAlgorithm.get_fitness()))
-final_population = GeneticAlgorithm.evolution(10)
-print(min([solution.obj() for solution in final_population]))
+print(np.mean(GeneticAlgorithm.get_fitness()))
+final_population = GeneticAlgorithm.evolution(3000)
+print(np.mean([solution.obj() for solution in final_population]))
 
-for i in range(len(final_population)):
-    if  not is_splex(final_population[i].A1, S):
-        print('Attention: There\'s an Error!!!')
-        break
+# for i in range(len(final_population)):
+#     if  not is_splex(final_population[i].A1, S):
+#         print('Attention: There\'s an Error!!!')
+#         break
 
