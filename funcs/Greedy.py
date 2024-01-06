@@ -2,6 +2,10 @@ import numpy as np
 from funcs import adjmatrix2adjmap
 from itertools import chain
 import random
+import numba as nb
+import numba.types as nbt
+import numpy.typing as npt
+from typing import List
 
 class GreedySPlex:
     TERROR_VALUE = 99999
@@ -104,3 +108,121 @@ class GreedySPlex:
                 if added_edges is not None:
                     A1[k, added_edges[k]] = 1
                     A1[added_edges[k], k] = 1
+
+###
+
+
+@nb.njit
+def delete(arr, idx):
+    '''deletes a column,row from a matrix'''
+    mask = np.ones(arr.shape[0], dtype=np.bool_)
+    mask[idx] = False
+    return arr[mask][:,mask]
+
+@nb.njit
+def rand_choice(odds):
+    """
+    :param odds: A 1D numpy array of values to sample from.
+    :return: A random sample from the given array with a given probability.
+    """
+    freq = np.exp(odds) # softmax
+    # freq = odds - odds.min()
+
+    prob = freq/freq.sum()
+    return np.searchsorted(np.cumsum(prob), np.random.random(), side="right")
+
+@nb.njit(nbt.UniTuple(nb.int32,2)(nb.int32[:,:]))
+def random_idx(A : npt.NDArray[np.int32]):
+    '''Extracts a random edge out of an adjacency matrix'''
+    idx = np.triu_indices(A.shape[0], k=1)
+    p = np.zeros_like(idx[0], dtype=np.int32)
+    for k, (i,j) in enumerate(zip(*idx)):
+        p[k] = -A[i,j]
+
+    e = rand_choice(p)
+    i,j = idx[0][e], idx[1][e]
+
+    return i,j
+
+
+@nb.njit#(nbt.UniTuple(nbt.List(nbt.List(nb.int32)), )(nb.int32[:,:]))
+def weighted_karger(W : npt.NDArray[np.int32], random=False):
+    '''Inspired by Karger algroithm for probabilistic min-cut. 
+    It searches the max-cut over the weighted edges and partitions the graph into clusters
+    '''
+    A = W.copy()
+    cluster = [[i] for i in range(W.shape[0])]
+    nodes = list(range(W.shape[0]))
+
+    while A.shape[0] > 2 and A.min() < 0 :
+        if random:
+            i,j = random_idx(A)
+        else: 
+            i,j =  divmod(A.argmin(), A.shape[1]) # deterministic
+
+        cluster[i] += cluster[j]
+
+        A[i] += A[j]
+        A[:,i] += A[:,j]
+        A = delete(A, j)
+
+        del cluster[j]
+        del nodes[j]
+
+
+    return cluster
+
+
+def deletion_heuristic(A : npt.NDArray[np.int32], plex: List[int], s:int):
+    '''given some plex nodes remove all the possible edges starting from the biggest one until possible'''
+    if len(plex) == 1:
+        return np.zeros_like(A, dtype=np.int32)
+    cluster_idx = np.ix_(plex, plex)
+    Ac = A[cluster_idx]     # Adjacency matrix for the cluster only
+    min_edges = len(plex) - s
+    sorted_edges = np.argsort(Ac, axis=-1)[:,s::-1]
+    A1 = np.ones_like(Ac, dtype=np.int32)
+    np.fill_diagonal(A1, 0)
+    
+    for i in range(Ac.shape[0]):
+        extra_edges = min(A1[i].sum() - min_edges, A1.shape[1])
+        for k in range(extra_edges):
+            to_remove = sorted_edges[i,k]
+            if Ac[i,to_remove] < 0:
+                break
+
+            if A1[i,to_remove] == 0 or A1[to_remove].sum() <= min_edges:
+                continue
+            A1[i,to_remove] = 0
+            A1[to_remove,i] = 0
+
+
+    res = np.zeros_like(A, dtype=np.int32)
+    res[cluster_idx] = A1
+    return res
+
+class Karger:
+    def __init__(self, adjacency_matrix : np.ndarray, weight_matrix: np.ndarray, s: int):
+        self.A = adjacency_matrix
+        self.W = weight_matrix.copy()
+        np.fill_diagonal(self.W, self.W.sum())
+        self.W[adjacency_matrix==1] *= -1
+        self.s = s 
+
+
+    def random_solution(self):
+        clusters = weighted_karger(self.W, random=True)
+        A1 = sum(deletion_heuristic(self.W, plex=cl, s=self.s) for cl in clusters)
+
+        splexes = {i:plex for plex in clusters for i in plex}
+        return A1, splexes
+    
+    def solution(self):
+        clusters = weighted_karger(self.W, random=False)
+        A1 = sum(deletion_heuristic(self.W, plex=cl, s=self.s) for cl in clusters)
+
+        splexes = {i:plex for plex in clusters for i in plex}
+        return A1, splexes
+
+
+
