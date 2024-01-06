@@ -37,3 +37,6 @@ class Solution:
         W1[A==1] = - W1[A==1]
 
         return Solution(W1,A1,clusters)
+    
+    def get_cluster(self):
+        return self.clusters

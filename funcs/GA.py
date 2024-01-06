@@ -2,8 +2,12 @@ import numpy as np
 from .Solution import Solution
 
 class GeneticAlgorithm:
-    def __init__(self, population: list) -> None:
+    def __init__(self, population: list, A) -> None:
         self.population = population
+        self.A = A
+    
+    def get_population(self) -> list:
+        return self.population
 
     def get_fitness(self) -> list:
         return [solution.obj() for solution in self.population]
@@ -21,7 +25,17 @@ class GeneticAlgorithm:
         return population[np.random.randint(len(population))]
     
     def crossover(self, parent1: Solution, parent2: Solution) -> Solution:
-        return parent1
+        child_W = parent1.W
+        child_A1 = parent1.A1 * parent2.A1
+        child_clusters = [[i] for i in range(child_W.shape[0])]
+        for i in range(child_W.shape[0]):
+            for j in range(child_W.shape[0]):
+                if child_A1[i][j] == 1:
+                    child_clusters[i].append(j)
+        child_splexes = {i:plex for plex in child_clusters for i in plex}
+
+        child = Solution.build(self.A, child_W, child_A1, child_splexes)
+        return child
     
     def mutation(self, child: Solution) -> Solution:
         return child
