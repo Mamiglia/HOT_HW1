@@ -1,11 +1,18 @@
 import os
 from funcs import *
+from funcs.Greedy import Karger
 
 # folder = 'data/test_instances/'
 
 file = 'data/test_instances/heur001_n_10_m_31.txt'
 S,A,W = readin(file)
 greedy = Karger(A, W, S)
+def random_start():
+    A1, splexes = greedy.random_solution()
+    print('Ran greedy')
+    return Solution.build(A,W,A1, splexes)
+
+x0 = random_start()
 
 # for file in os.listdir(folder):
 #     if not os.path.isfile(folder + file):
@@ -19,22 +26,8 @@ greedy = Karger(A, W, S)
 #         print('Ran greedy')
 #         return Solution.build(A,W,A1, splexes) 
 
-#     mn = MoveNode(S, A.shape[0])
-#     def move_node(x):
-#         return mn.shaking(x)
-#     sn = SwapNode(A.shape[0])
-#     def swap_node(x):
-#         return sn.shaking(x)
-
-#     f = Flip1(S)
-#     def flip1(x):
-#         return f.shaking(x)
     
-#     d = Divide()
-#     def divide(x):
-#         return d.shaking(x)
-    
-#     # Greedy construction
+# #     # Greedy construction
 #     x0 = random_start()
 
 #     # local_search = VariableNeighborhoodDescent([SwapNode(A.shape[0])])
