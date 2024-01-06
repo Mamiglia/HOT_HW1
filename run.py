@@ -1,4 +1,4 @@
-from funcs import readin, Solution, GA
+from funcs import readin, Solution, GA, is_splex, GRASP
 from funcs.Greedy import Karger
 import numpy as np
 
@@ -48,6 +48,21 @@ def deletion_heuristic(A, plex, s):
     res = np.zeros_like(A, dtype=np.int32)
     res[cluster_idx] = A1
     return res
+
+grasp = GRASP(sn, trials=10)
+xb = grasp.search(S, A, W)
+    
+# xb, _ = frigidum.sa(random_start=random_start, 
+#         neighbours=[move_node, swap_node, flip1], 
+#         objective_function=lambda x: x.obj(), 
+#         T_start=10**5, 
+#         T_stop=1e-3, 
+#         repeats=10**4//2, 
+#         copy_state=frigidum.annealing.naked)
+# grasp = GRASP(SwapNode(A.shape[0]), trials=100)
+# xb = grasp.search(S,A,W)
+
+assert(is_splex(xb.A1, S))
 
 child_W = parent1.W
 child_A1 = parent1.A1 * parent2.A1
