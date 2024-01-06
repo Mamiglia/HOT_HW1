@@ -1,4 +1,4 @@
-from funcs import readin, Solution, GA, is_splex, GRASP
+from funcs import readin, Solution, GA, is_splex, GRASP, VariableNeighborhoodDescent, SwapNode
 from funcs.Greedy import Karger
 import numpy as np
 
@@ -49,8 +49,12 @@ def deletion_heuristic(A, plex, s):
     res[cluster_idx] = A1
     return res
 
-grasp = GRASP(sn, trials=10)
-xb = grasp.search(S, A, W)
+local_search = VariableNeighborhoodDescent([SwapNode(A.shape[0])])
+xb = local_search.search(x0)
+
+
+# grasp = GRASP(sn, trials=10)
+# xb = grasp.search(S, A, W)
     
 # xb, _ = frigidum.sa(random_start=random_start, 
 #         neighbours=[move_node, swap_node, flip1], 
