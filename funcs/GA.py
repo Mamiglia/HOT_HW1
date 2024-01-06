@@ -5,6 +5,9 @@ class GeneticAlgorithm:
     def __init__(self, population: list) -> None:
         self.population = population
 
+    def get_fitness(self) -> list:
+        return [solution.obj() for solution in self.population]
+
     def next_generation(self, population: list) -> list:        
         parent1 = self.selection(population)
         parent2 = self.selection(population)
