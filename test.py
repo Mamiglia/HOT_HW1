@@ -1,7 +1,7 @@
 import numpy as np
 from funcs import writeout, readin, insertion_heuristic, deletion_heuristic, Karger, Solution, LargeNeighborhoodSearch, Divide, Merge, SwapNode, is_splex
 
-S, A, W = readin('data\competition_instances\heur049_n_300_m_17695.txt')
+S, A, W = readin('data/competition_instances/heur051_n_300_m_20122.txt')
 print(S)
 
 greedy = Karger(A, W, S)
@@ -27,4 +27,4 @@ x1 = lns.search(x0)
 
 # print(x1)
 print(is_splex(x1.A1, S), x1.obj())
-writeout(A, x1.A1, 'output\\competition\\', 'heur049_n_300_m_17695', addendum='_'+str(x1.obj()))
+writeout(A, x1.A1, 'output\\competition\\', 'heur051_n_300_m_20122', addendum='_'+str(x1.obj()))
