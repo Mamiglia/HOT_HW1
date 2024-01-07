@@ -3,6 +3,5 @@ funcs/__pycache__/*
 *.pyc
 *.pyc
 data/
-output/
 venv/
 *.cpython-*

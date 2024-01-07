@@ -1,7 +1,7 @@
 import numpy as np
-from funcs import readin, insertion_heuristic, deletion_heuristic, Karger, Solution, LargeNeighborhoodSearch, Divide, Merge, SwapNode, is_splex
+from funcs import writeout, readin, insertion_heuristic, deletion_heuristic, Karger, Solution, LargeNeighborhoodSearch, Divide, Merge, SwapNode, is_splex
 
-S, A, W = readin('data/tuning_instances/heur053_n_300_m_39861.txt')
+S, A, W = readin('data\competition_instances\heur049_n_300_m_17695.txt')
 print(S)
 
 greedy = Karger(A, W, S)
@@ -18,10 +18,13 @@ lns = LargeNeighborhoodSearch(
     repairers = [insertion_heuristic, deletion_heuristic],
     epochs = 100, 
     temperature = 1e4,
-    alpha = 0.9
+    alpha = 0.92,
+    gamma=0.9, 
+    stop_temp=10
 )
 
 x1 = lns.search(x0)
 
 # print(x1)
 print(is_splex(x1.A1, S), x1.obj())
+writeout(A, x1.A1, 'output\\competition\\', 'heur049_n_300_m_17695', addendum='_'+str(x1.obj()))

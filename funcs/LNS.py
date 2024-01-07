@@ -6,7 +6,7 @@ from .splex_utils import is_splex
 from tqdm import tqdm
 
 class LargeNeighborhoodSearch:
-    def __init__(self, destroyers, repairers, s, gamma = 0.1, epochs = 1000, temperature = 1e3 , alpha = 0.9) -> None:
+    def __init__(self, destroyers, repairers, s, gamma = 0.1, epochs = 1000, temperature = 1e3, stop_temp = 50 , alpha = 0.9) -> None:
         self.s = s
         self.gamma = gamma
         self.destroyers = destroyers
@@ -23,7 +23,7 @@ class LargeNeighborhoodSearch:
         self.repa_att  = np.zeros((len(repairers), ), dtype=int)
 
         self.epochs = epochs
-        self.periods = np.ceil(np.log(50/temperature) / np.log(alpha)).astype(int)
+        self.periods = np.ceil(np.log(stop_temp/temperature) / np.log(alpha)).astype(int)
 
         self.temperature = temperature
         self.alpha = alpha
@@ -36,7 +36,7 @@ class LargeNeighborhoodSearch:
         self.best = x0
         self.best_score = x0.obj()
 
-        for j in tqdm(range(self.periods)):
+        for j in range(self.periods):
             self.rho_neg /= self.rho_neg.sum()
             self.rho_pos /= self.rho_pos.sum()
             for i in range(self.epochs):
@@ -45,8 +45,8 @@ class LargeNeighborhoodSearch:
             self.rho_neg = (1-self.gamma) *self.rho_neg + self.gamma * self.dest_succ/self.dest_att
             self.rho_pos = (1-self.gamma) *self.rho_pos + self.gamma * self.repa_succ/self.repa_att
             self.temperature = self.alpha * self.temperature
-            print(f'END EPOCH {j}\t Current best {self.best_score}\t Temperature {self.temperature}')
-            print(self.rho_neg, self.rho_pos)
+            # print(f'END EPOCH {j}\t Current best {self.best_score}\t Temperature {self.temperature}')
+            # print(self.rho_neg, self.rho_pos)
         return self.best
 
     def step(self, x0: Solution) -> Solution:

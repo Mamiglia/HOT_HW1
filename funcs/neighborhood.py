@@ -173,7 +173,7 @@ class SwapNode(Neighborhood):
             y.clusters[j].append(j)
 
         # Delta Eval
-        y._obj = x.obj() + x.W[i]@(y.A1[i] - x.A1[i]) + x.W[j]@(y.A1[j] - x.A1[j]) 
+        #y._obj = x.obj() + x.W[i]@(y.A1[i] - x.A1[i]) + x.W[j]@(y.A1[j] - x.A1[j]) 
 
         return y
     
@@ -299,7 +299,7 @@ class Divide(Neighborhood):
                 y.clusters[i] = subplex
         y.A1 *= mask
 
-        y._obj = x.obj() - ((1-mask) * x.A1 * x.W).sum()//2
+        #y._obj = x.obj() - ((1-mask) * x.A1 * x.W).sum()//2
         return y, subplexes
     
     def neighbors(self, x: Solution) -> Iterator[Solution]:
