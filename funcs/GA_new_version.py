@@ -1,7 +1,10 @@
 import numpy as np
 from .Solution import Solution
-from funcs import VariableNeighborhoodDescent, Flip1
+from funcs import VariableNeighborhoodDescent, SwapNode
 from itertools import chain
+
+from funcs.Greedy import Karger
+
 
 def deletion_heuristic(A, plex, s):
     '''given some plex nodes remove all the possible edges starting from the biggest one until possible'''
@@ -28,11 +31,19 @@ def deletion_heuristic(A, plex, s):
     res[cluster_idx] = A1
     return res
 
-class GeneticAlgorithm:
-    def __init__(self, population: list, A, S) -> None:
-        self.population = population
+class GeneticAlgorithm_modified:
+    def __init__(self, A, W, S, length_population: int = 100) -> None:
         self.A = A
-        self.S = S 
+        self.W = W
+        self.S = S
+        self.length_population = length_population
+
+        # Initialize population
+        greedy = Karger(A, W, S)
+        def random_start():
+            A1, splexes = greedy.random_solution()
+            return Solution.build(A, W, A1, splexes)
+        self.population = [random_start() for _ in range(length_population)]
     
     def get_population(self) -> list:
         return self.population
