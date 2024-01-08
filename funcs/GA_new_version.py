@@ -1,5 +1,5 @@
 import numpy as np
-from funcs.Solution import Solution
+from .Solution import Solution
 from funcs import VariableNeighborhoodDescent, Flip1, QualityFlip1, SwapNode
 from itertools import chain
 
@@ -8,12 +8,13 @@ from funcs.Greedy import deletion_heuristic
 from funcs.Greedy import GreedySPlex
 from .VND import partial_local_search
 class GeneticAlgorithm_modified:
-    def __init__(self, A, W, S, length_population: int = 100, mut: bool=True) -> None:
+    def __init__(self, A, W, S, length_population: int = 100, mut: bool=True, k: float=0.0) -> None:
         self.A = A
         self.W = W
         self.S = S
         self.length_population = length_population
         self.mut= mut
+        self.k = k
 
         # Initialize population
         len_karger = int(length_population*0.75)
@@ -58,7 +59,6 @@ class GeneticAlgorithm_modified:
         else:
             prob = np.array([solution.obj() for solution in population])/sum([solution.obj() for solution in population])
             return np.random.choice(population, p=prob)
-
     
     def crossover(self, parent1: Solution, parent2: Solution) -> Solution:
         child_W = parent1.W
@@ -72,22 +72,37 @@ class GeneticAlgorithm_modified:
                     to_remove.append(j)
 
         child_clusters = [c for i,c in enumerate(child_clusters) if i not in to_remove]
+
+        P = np.random.rand()
+        for i in range(10):
+            if self.k <= P:
+                lengths = [len(c) for c in child_clusters]
+                max_len = max(lengths)
+                prob_cl = np.array([max_len - l for l in lengths])/sum([max_len - l for l in lengths])
+                i = np.random.choice(len(child_clusters), p=prob_cl)
+                j = np.random.choice(len(child_clusters), p=prob_cl)
+                if i != j:
+                    child_clusters[i].extend(child_clusters[j])
+                    child_clusters.pop(j)
+
         child_A1 = sum(deletion_heuristic(child_W, plex=cl, s=self.S) for cl in child_clusters)
         child_splexes = {i:plex for plex in child_clusters for i in plex}
         child = Solution.build(self.A, child_W, child_A1, child_splexes)
-        print('Prima local search')
-        try:
-            neighbourhood = [SwapNode(self.A.shape[0])]
-            local_search = partial_local_search(neighbourhood)
-            child = local_search.search(child)
-        finally:
-            return child
+
+        return child
+
     
     def mutation(self, child: Solution) -> Solution:
-        # if self.mut:
-        #     local_search = VariableNeighborhoodDescent([SwapNode(self.A.shape[0])])
-        #     child = local_search.search(child)
-        return child
+        try:
+            if self.mut:
+                neighbourhood = [SwapNode(self.A.shape[0])]
+                local_search = partial_local_search(neighbourhood, 1)
+                child = local_search.search(child)
+                neighbourhood = [Flip1(self.S)]
+                local_search = partial_local_search(neighbourhood, 10)
+                child = local_search.search(child)
+        finally:
+            return child
     
     def survival(self, population: list, child: Solution) -> list:
         worst_fitness = child.obj()
@@ -99,7 +114,7 @@ class GeneticAlgorithm_modified:
         
         if idx != -1:
             population[idx] = child
-            print('Replaced')
+            # print('Replaced')
 
         return population
     
@@ -110,6 +125,8 @@ class GeneticAlgorithm_modified:
             population = self.next_generation(population)
             if generation % 100 == 0:
                 print(f'Generation {generation}')
+                print(f'Mean fitness: {np.mean([solution.obj() for solution in population])}')
+                print(f'Best fitness: {min([solution.obj() for solution in population])}')
 
         return population
 

@@ -3,35 +3,36 @@ from funcs.Greedy import Karger
 import numpy as np
 from funcs.readin import writeout
 
-file = 'data/test_instances/heur009_n_250_m_1450.txt'
+# file = 'data/test_instances/heur009_n_250_m_1450.txt'
+# file = 'data/test_instances/heur029_n_330_m_4329.txt'
 # file = 'data/inst_competition/heur050_n_300_m_19207.txt'
+# file = 'data/test_instances/heur001_n_10_m_31.txt'
+
+# Tuning istances
+# file = 'data/inst_tuning/heur040_n_300_m_13358.txt'
+# file = 'data/inst_tuning/heur041_n_300_m_17492.txt'
+# file = 'data/inst_tuning/heur042_n_300_m_5764.txt'
+file = 'data/inst_tuning/heur043_n_300_m_12914.txt'
+# file = 'data/inst_tuning/heur058_n_300_m_4010.txt'
 
 S,A,W = readin(file)
 
 # Genetic Algorithm
-GeneticAlgorithm = GA_new_version.GeneticAlgorithm_modified(A, W, S, length_population=100)
+GeneticAlgorithm = GA_new_version.GeneticAlgorithm_modified(A, W, S, length_population=100, k=0.0)
 
-# parent1 = GeneticAlgorithm.selection(initial_population)
-# parent2 = GeneticAlgorithm.selection(initial_population)
-# child = GeneticAlgorithm.crossover(parent1, parent2)
-# if is_splex(child.A1, S):
-#     print('Yes')
-
-print(np.mean(GeneticAlgorithm.get_fitness()))
 final_population = GeneticAlgorithm.evolution(3000)
-print(np.min([solution.obj() for solution in final_population]))
 
-# for i in range(len(final_population)):
-#     if  not is_splex(final_population[i].A1, S):
-#         print('Attention: There\'s an Error!!!')
-#         break
+for i in range(len(final_population)):
+    if  not is_splex(final_population[i].A1, S):
+        print('Attention: There\'s an Error!!!')
+        break
 
 folder = 'data/competition_results'
 
 xb = min(final_population, key=lambda x: x.obj())
 details = f'_GA_{xb.obj()}'
 # prob_name = 'heur049_n_300_m_17695'
-prob_name = 'heur050_n_300_m_19207'
+# prob_name = 'heur050_n_300_m_19207'
 # prob_name = 'heur051_n_300_m_20122'
 if is_splex(xb.A1, S)==True:
     print('Admissible')
