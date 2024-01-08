@@ -1,18 +1,19 @@
 import numpy as np
-from .Solution import Solution
-from funcs import VariableNeighborhoodDescent, SwapNode
+from funcs.Solution import Solution
+from funcs import VariableNeighborhoodDescent, Flip1, QualityFlip1, SwapNode
 from itertools import chain
 
 from funcs.Greedy import Karger
 from funcs.Greedy import deletion_heuristic
 from funcs.Greedy import GreedySPlex
-
+from .VND import partial_local_search
 class GeneticAlgorithm_modified:
-    def __init__(self, A, W, S, length_population: int = 100) -> None:
+    def __init__(self, A, W, S, length_population: int = 100, mut: bool=True) -> None:
         self.A = A
         self.W = W
         self.S = S
         self.length_population = length_population
+        self.mut= mut
 
         # Initialize population
         len_karger = int(length_population*0.75)
@@ -74,11 +75,18 @@ class GeneticAlgorithm_modified:
         child_A1 = sum(deletion_heuristic(child_W, plex=cl, s=self.S) for cl in child_clusters)
         child_splexes = {i:plex for plex in child_clusters for i in plex}
         child = Solution.build(self.A, child_W, child_A1, child_splexes)
-        # local_search = VariableNeighborhoodDescent([SwapNode(self.A.shape[0])])
-        # child = local_search.search(child)
-        return child
+        print('Prima local search')
+        try:
+            neighbourhood = [SwapNode(self.A.shape[0])]
+            local_search = partial_local_search(neighbourhood)
+            child = local_search.search(child)
+        finally:
+            return child
     
     def mutation(self, child: Solution) -> Solution:
+        # if self.mut:
+        #     local_search = VariableNeighborhoodDescent([SwapNode(self.A.shape[0])])
+        #     child = local_search.search(child)
         return child
     
     def survival(self, population: list, child: Solution) -> list:
@@ -104,4 +112,4 @@ class GeneticAlgorithm_modified:
                 print(f'Generation {generation}')
 
         return population
-    
+
