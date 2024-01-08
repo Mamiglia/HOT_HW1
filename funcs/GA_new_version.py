@@ -4,32 +4,8 @@ from funcs import VariableNeighborhoodDescent, SwapNode
 from itertools import chain
 
 from funcs.Greedy import Karger
-
-
-def deletion_heuristic(A, plex, s):
-    '''given some plex nodes remove all the possible edges starting from the biggest one until possible'''
-    if len(plex) == 1:
-        return np.zeros_like(A, dtype=np.int32)
-    cluster_idx = np.ix_(plex, plex)
-    Ac = A[cluster_idx]     # Adjacency matrix for the cluster only
-    min_edges = len(plex) - s
-    sorted_edges = np.argsort(Ac, axis=-1)[:,s::-1]
-    A1 = np.ones_like(Ac, dtype=np.int32)
-    np.fill_diagonal(A1, 0)
-    
-    for i in range(Ac.shape[0]):
-        extra_edges = min(A1[i].sum() - min_edges, A1.shape[1])
-        for k in range(extra_edges):
-            to_remove = sorted_edges[i,k]
-            if Ac[i,to_remove] < 0:
-                break
-            if A1[i,to_remove] == 0 or A1[to_remove].sum() <= min_edges:
-                continue
-            A1[i,to_remove] = 0
-            A1[to_remove,i] = 0
-    res = np.zeros_like(A, dtype=np.int32)
-    res[cluster_idx] = A1
-    return res
+from funcs.Greedy import deletion_heuristic
+from funcs.Greedy import GreedySPlex
 
 class GeneticAlgorithm_modified:
     def __init__(self, A, W, S, length_population: int = 100) -> None:
@@ -39,11 +15,26 @@ class GeneticAlgorithm_modified:
         self.length_population = length_population
 
         # Initialize population
-        greedy = Karger(A, W, S)
-        def random_start():
-            A1, splexes = greedy.random_solution()
+        len_karger = int(length_population*0.75)
+        len_random = length_population-len_karger-1
+
+        greedy_karger = Karger(A, W, S)
+        def karger_start():
+            A1, splexes = greedy_karger.random_solution()
             return Solution.build(A, W, A1, splexes)
-        self.population = [random_start() for _ in range(length_population)]
+        self.population = [karger_start() for _ in range(len_karger)]
+
+        greedy_random = GreedySPlex(A, W, S)
+        def random_start():
+            A1, splexes = greedy_random.random_solution()
+            return Solution.build(A, W, A1, splexes)
+        self.population.extend([random_start() for _ in range(len_random)])
+
+        greedy_optimal = GreedySPlex(A, W, S)
+        def opt_start():
+            A1, splexes = greedy_optimal.solution()
+            return Solution.build(A, W, A1, splexes)
+        self.population.append(opt_start())
     
     def get_population(self) -> list:
         return self.population
@@ -60,8 +51,13 @@ class GeneticAlgorithm_modified:
 
         return population
     
-    def selection(self, population: list) -> Solution:
-        return population[np.random.randint(len(population))]
+    def selection(self, population: list, random: bool=True) -> Solution:
+        if random:
+            return population[np.random.randint(len(population))]
+        else:
+            prob = np.array([solution.obj() for solution in population])/sum([solution.obj() for solution in population])
+            return np.random.choice(population, p=prob)
+
     
     def crossover(self, parent1: Solution, parent2: Solution) -> Solution:
         child_W = parent1.W

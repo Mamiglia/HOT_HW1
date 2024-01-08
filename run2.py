@@ -3,8 +3,8 @@ from funcs.Greedy import Karger
 import numpy as np
 from funcs.readin import writeout
 
-
-file = 'data/inst_competition/heur050_n_300_m_19207.txt'
+file = 'data/test_instances/heur009_n_250_m_1450.txt'
+# file = 'data/inst_competition/heur050_n_300_m_19207.txt'
 
 S,A,W = readin(file)
 
@@ -36,4 +36,4 @@ prob_name = 'heur050_n_300_m_19207'
 if is_splex(xb.A1, S)==True:
     print('Admissible')
 print(xb.obj())
-writeout(A, xb.A1, folder, prob_name, details)
+# writeout(A, xb.A1, folder, prob_name, details)
