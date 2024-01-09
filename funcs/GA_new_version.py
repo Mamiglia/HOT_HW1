@@ -78,7 +78,7 @@ class GeneticAlgorithm_modified:
             if self.k <= P:
                 lengths = [len(c) for c in child_clusters]
                 max_len = max(lengths)
-                prob_cl = np.array([max_len - l for l in lengths])/sum([max_len - l for l in lengths])
+                prob_cl = np.array([max_len - l for l in lengths])/(sum([max_len - l for l in lengths])+1e-6)
                 i = np.random.choice(len(child_clusters), p=prob_cl)
                 j = np.random.choice(len(child_clusters), p=prob_cl)
                 if i != j:
