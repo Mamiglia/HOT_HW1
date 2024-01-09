@@ -79,8 +79,12 @@ class GeneticAlgorithm_modified:
                 lengths = [len(c) for c in child_clusters]
                 max_len = max(lengths)
                 prob_cl = np.array([max_len - l for l in lengths])/(sum([max_len - l for l in lengths])+1e-6)
-                i = np.random.choice(len(child_clusters), p=prob_cl)
-                j = np.random.choice(len(child_clusters), p=prob_cl)
+                if sum(prob_cl) == 1:
+                    i = np.random.choice(len(child_clusters), p=prob_cl)
+                    j = np.random.choice(len(child_clusters), p=prob_cl)
+                else:
+                    i = np.random.choice(len(child_clusters))
+                    j = np.random.choice(len(child_clusters))
                 if i != j:
                     child_clusters[i].extend(child_clusters[j])
                     child_clusters.pop(j)
@@ -123,7 +127,7 @@ class GeneticAlgorithm_modified:
         for generation in range(max_generations):
             # print(f'Generation {generation}')
             population = self.next_generation(population)
-            if generation % 100 == 0:
+            if generation % 1000 == 0:
                 print(f'Generation {generation}')
                 print(f'Mean fitness: {np.mean([solution.obj() for solution in population])}')
                 print(f'Best fitness: {min([solution.obj() for solution in population])}')
