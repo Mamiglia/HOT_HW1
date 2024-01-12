@@ -99,9 +99,9 @@ class GeneticAlgorithm_modified:
     def mutation(self, child: Solution) -> Solution:
         try:
             if self.mut:
-                neighbourhood = [SwapNode(self.A.shape[0])]
-                local_search = partial_local_search(neighbourhood, 1)
-                child = local_search.search(child)
+                # neighbourhood = [SwapNode(self.A.shape[0])]
+                # local_search = partial_local_search(neighbourhood, 1)
+                # child = local_search.search(child)
                 neighbourhood = [Flip1(self.S)]
                 local_search = partial_local_search(neighbourhood, 10)
                 child = local_search.search(child)
@@ -124,13 +124,26 @@ class GeneticAlgorithm_modified:
     
     def evolution(self, max_generations: int = 1000) -> Solution:
         population = self.population
+        x_mean = 0
+        x_min = 0
+        mean_fitness_population = []
+        best_fitness_population = []
         for generation in range(max_generations):
             # print(f'Generation {generation}')
             population = self.next_generation(population)
+            mean_fitness_population.append(np.mean([solution.obj() for solution in population]))
+            best_fitness_population.append(min([solution.obj() for solution in population]))
+            if generation % 500 == 0:
+                fit_mean = np.mean([solution.obj() for solution in population])
+                fit_min = min([solution.obj() for solution in population])
+                if fit_min==x_min and fit_mean==x_mean:
+                    break
+                x_mean = fit_mean
+                x_min = fit_min            
             if generation % 1000 == 0:
                 print(f'Generation {generation}')
-                print(f'Mean fitness: {np.mean([solution.obj() for solution in population])}')
-                print(f'Best fitness: {min([solution.obj() for solution in population])}')
+                print(f'Mean fitness: {fit_mean}')
+                print(f'Best fitness: {fit_min}')
 
-        return population
+        return population, mean_fitness_population, best_fitness_population
 

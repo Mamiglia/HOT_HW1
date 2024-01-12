@@ -20,36 +20,42 @@ folder = 'data/inst_tuning/'
 for file in os.listdir(folder):
     if not os.path.isfile(folder + file):
         continue
-    if file == 'heur040_n_300_m_13358.txt':
-        continue
-    if file == 'heur041_n_300_m_17492.txt':
-        continue
-    if file == 'heur042_n_300_m_5764.txt':
-        continue
-    if file == 'heur043_n_300_m_12914.txt':
+    if file != 'heur058_n_300_m_4010.txt':
         continue
     print(file)
     S,A,W = readin(folder + file)
-    mean_fitness_population = []
-    best_fitness_population = []
-    for i in range(5):
-        # Genetic Algorithm
-        GeneticAlgorithm = GA_new_version.GeneticAlgorithm_modified(A, W, S, length_population=100, k=0.0)
-        final_population = GeneticAlgorithm.evolution(3000)
+    # mean_fitness_population = []
+    # best_fitness_population = []
+    # for i in range(5):
+    #     # Genetic Algorithm
+    #     GeneticAlgorithm = GA_new_version.GeneticAlgorithm_modified(A, W, S, length_population=100, k=0.5)
+    #     final_population = GeneticAlgorithm.evolution(3000)
 
-        for i in range(len(final_population)):
-            if  not is_splex(final_population[i].A1, S):
-                print('Attention: There\'s an Error!!!')
-                break
+    #     for i in range(len(final_population)):
+    #         if  not is_splex(final_population[i].A1, S):
+    #             print('Attention: There\'s an Error!!!')
+    #             break
 
-        mean_fitness_population.append(np.mean([solution.obj() for solution in final_population]))
-        best_fitness_population.append(min([solution.obj() for solution in final_population]))
-    print(f'Best fitness: {np.mean(best_fitness_population)}')
-    print(best_fitness_population)
-    print(f'Mean fitness: {np.mean(mean_fitness_population)}')
-    print(mean_fitness_population)
+    #     mean_fitness_population.append(np.mean([solution.obj() for solution in final_population]))
+    #     best_fitness_population.append(min([solution.obj() for solution in final_population]))
+    # print(f'Best fitness: {np.mean(best_fitness_population)}')
+    # print(best_fitness_population)
+    # print(f'Mean fitness: {np.mean(mean_fitness_population)}')
+    # print(mean_fitness_population)
 
-    
+    # Genetic Algorithm
+
+    GeneticAlgorithm = GA_new_version.GeneticAlgorithm_modified(A, W, S, length_population=100, k=1)
+    final_population, mean_fitness_population, best_fitness_population = GeneticAlgorithm.evolution(3000)
+    for i in range(len(final_population)):
+        if  not is_splex(final_population[i].A1, S):
+            print('Attention: There\'s an Error!!!')
+            break
+
+print('Mean fitness:')
+print(mean_fitness_population)
+print('Best fitness:')
+print(best_fitness_population)  
 
 # 10 time Tuning test
 # mean_fitness_population = []
